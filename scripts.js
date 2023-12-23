@@ -1,71 +1,64 @@
-// Basic hashing function (not as secure as bcrypt)
-const hashPassword = (password) => {
-  const salt = "your_strong_secret_salt"; // Replace with a strong, unique salt
-  return CryptoJS.SHA256(password + salt).toString();
-};
+// server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
-// Compare password with hashed password
-const comparePassword = (password, hashedPassword) => {
-  const salt = "your_strong_secret_salt"; // Use the same salt for comparison
-  const hashedAttempt = CryptoJS.SHA256(password + salt).toString();
-  return hashedAttempt === hashedPassword;
-};
+const app = express();
+const port = process.env.PORT || 3000;
 
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-const errorMessage = document.getElementById("error-message");
-const loginButton = document.getElementById("loginButton");
-const signupButton = document.getElementById("signupButton");
-const signupSubmitButton = document.getElementById("signupSubmit");
+// Connect to MongoDB (replace 'your-mongodb-uri' with your actual MongoDB connection string)
+mongoose.connect('your-mongodb-uri', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-// Function to store credentials (replace with your actual storage mechanism)
-const storeCredentials = async (username, password) => {
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+});
+
+const User = mongoose.model('User', userSchema);
+
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+app.post('/api/signup', async (req, res) => {
+  const { username, password } = req.body;
+
   try {
-    const hashedPassword = await hashPassword(password);
-    // Example using localStorage for demonstration, replace with a secure storage method
-    localStorage.setItem("username", username);
-    localStorage.setItem("password", hashedPassword);
-    console.log("Credentials stored successfully.");
-  } catch (error) {
-    console.error("Error storing credentials:", error);
-    errorMessage.textContent = "Error storing credentials.";
-  }
-};
+    const existingUser = await User.findOne({ username });
 
-// Function to retrieve stored credentials
-const retrieveCredentials = () => {
-  try {
-    const storedUsername = localStorage.getItem("username");
-    const storedPassword = localStorage.getItem("password");
-    return { username: storedUsername, password: storedPassword };
-  } catch (error) {
-    console.error("Error retrieving credentials:", error);
-    return null;
-  }
-};
-
-loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-
-  if (event.target === loginButton) {
-    // Handle login
-    const storedCredentials = await retrieveCredentials();
-    if (storedCredentials) {
-      if (await comparePassword(password, storedCredentials.password)) {
-        // Successful login
-        alert("Login successful!");
-      } else {
-        // Incorrect password
-        errorMessage.textContent = "Incorrect username or password.";
-      }
-    } else {
-      errorMessage.textContent = "No credentials found. Please signup first.";
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already exists' });
     }
+
+    const newUser = new User({ username, password });
+    await newUser.save();
+
+    res.json({ message: 'User created successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
-signupButton.addEventListener("click", () => {
-  loginForm
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const user = await User.findOne({ username, password });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    res.json({ message: 'Login successful' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
