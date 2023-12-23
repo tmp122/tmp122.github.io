@@ -1,20 +1,22 @@
+// Basic hashing function (not as secure as bcrypt)
+const hashPassword = (password) => {
+  const salt = "your_strong_secret_salt"; // Replace with a strong, unique salt
+  return CryptoJS.SHA256(password + salt).toString();
+};
+
+// Compare password with hashed password
+const comparePassword = (password, hashedPassword) => {
+  const salt = "your_strong_secret_salt"; // Use the same salt for comparison
+  const hashedAttempt = CryptoJS.SHA256(password + salt).toString();
+  return hashedAttempt === hashedPassword;
+};
+
 const loginForm = document.getElementById("loginForm");
 const errorMessage = document.getElementById("error-message");
+const loginButton = document.getElementById("loginButton");
+const signupButton = document.getElementById("signupButton");
 
-// Function to securely hash a password using bcrypt
-const hashPassword = async (password) => {
-  const saltRounds = 3; // Adjust for desired security level
-  const salt = await bcrypt.genSalt(saltRounds);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  return hashedPassword;
-};
-
-// Function to check if a password matches a hashed password
-const comparePassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
-};
-
-// Function to store credentials securely (replace with your actual storage mechanism)
+// Function to store credentials (replace with your actual storage mechanism)
 const storeCredentials = async (username, password) => {
   try {
     const hashedPassword = await hashPassword(password);
@@ -46,19 +48,30 @@ loginForm.addEventListener("submit", async (event) => {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
-  // Check for existing credentials (e.g., during login)
-  const storedCredentials = await retrieveCredentials();
-  if (storedCredentials) {
-    if (await comparePassword(password, storedCredentials.password)) {
-      // Successful login
-      alert("Login successful!");
+  if (event.target === loginButton) {
+    // Handle login
+    const storedCredentials = await retrieveCredentials();
+    if (storedCredentials) {
+      if (await comparePassword(password, storedCredentials.password)) {
+        // Successful login
+        alert("Login successful!");
+        // Clear form fields and error message (optional)
+      } else {
+        // Incorrect password
+        errorMessage.textContent = "Incorrect username or password.";
+      }
     } else {
-      // Incorrect password
-      errorMessage.textContent = "Incorrect username or password.";
+      errorMessage.textContent = "No credentials found. Please signup first.";
     }
-  } else {
-    // Store new credentials (e.g., during registration)
-    await storeCredentials(username, password);
-    errorMessage.textContent = "Credentials stored successfully.";
+  } else if (event.target === signupButton) {
+    // Handle signup
+    try {
+      await storeCredentials(username, password);
+      errorMessage.textContent = "Signup successful!";
+      // Clear form fields and error message (optional)
+    } catch (error) {
+      console.error("Error during signup:", error);
+      errorMessage.textContent = "Error during signup.";
+    }
   }
 });
