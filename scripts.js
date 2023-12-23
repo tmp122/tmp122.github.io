@@ -1,64 +1,50 @@
-// server.js
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+// script.js
+function toggleForm() {
+  var loginForm = document.getElementById("login-form");
+  var signupForm = document.getElementById("signup-form");
 
-const app = express();
-const port = process.env.PORT || 3000;
+  loginForm.style.display = loginForm.style.display === "none" ? "block" : "none";
+  signupForm.style.display = signupForm.style.display === "none" ? "block" : "none";
+}
 
-// Connect to MongoDB (replace 'your-mongodb-uri' with your actual MongoDB connection string)
-mongoose.connect('your-mongodb-uri', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+function login() {
+  var username = document.getElementById("login-username").value;
+  var password = document.getElementById("login-password").value;
 
-const userSchema = new mongoose.Schema({
-  username: String,
-  password: String,
-});
+  // Dummy login logic with AJAX (replace with actual API call)
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "http://localhost:3000/api/login", true);
+  xhr.setRequestHeader("Content-Type", "application/json");
 
-const User = mongoose.model('User', userSchema);
-
-app.use(bodyParser.json());
-app.use(express.static('public'));
-
-app.post('/api/signup', async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ username });
-
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      alert(xhr.responseText);
+    } else if (xhr.readyState === 4 && xhr.status !== 200) {
+      alert("Login failed. Please try again.");
     }
+  };
 
-    const newUser = new User({ username, password });
-    await newUser.save();
+  var data = JSON.stringify({ username: username, password: password });
+  xhr.send(data);
+}
 
-    res.json({ message: 'User created successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
+function signup() {
+  var username = document.getElementById("signup-username").value;
+  var password = document.getElementById("signup-password").value;
 
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
+  // Dummy signup logic with AJAX (replace with actual API call)
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "http://localhost:3000/api/signup", true);
+  xhr.setRequestHeader("Content-Type", "application/json");
 
-  try {
-    const user = await User.findOne({ username, password });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      alert(xhr.responseText);
+    } else if (xhr.readyState === 4 && xhr.status !== 200) {
+      alert("Sign-up failed. Please try again.");
     }
+  };
 
-    res.json({ message: 'Login successful' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+  var data = JSON.stringify({ username: username, password: password });
+  xhr.send(data);
+}
