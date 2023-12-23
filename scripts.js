@@ -12,9 +12,11 @@ const comparePassword = (password, hashedPassword) => {
 };
 
 const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
 const errorMessage = document.getElementById("error-message");
 const loginButton = document.getElementById("loginButton");
 const signupButton = document.getElementById("signupButton");
+const signupSubmitButton = document.getElementById("signupSubmit");
 
 // Function to store credentials (replace with your actual storage mechanism)
 const storeCredentials = async (username, password) => {
@@ -55,7 +57,6 @@ loginForm.addEventListener("submit", async (event) => {
       if (await comparePassword(password, storedCredentials.password)) {
         // Successful login
         alert("Login successful!");
-        // Clear form fields and error message (optional)
       } else {
         // Incorrect password
         errorMessage.textContent = "Incorrect username or password.";
@@ -63,15 +64,8 @@ loginForm.addEventListener("submit", async (event) => {
     } else {
       errorMessage.textContent = "No credentials found. Please signup first.";
     }
-  } else if (event.target === signupButton) {
-    // Handle signup
-    try {
-      await storeCredentials(username, password);
-      errorMessage.textContent = "Signup successful!";
-      // Clear form fields and error message (optional)
-    } catch (error) {
-      console.error("Error during signup:", error);
-      errorMessage.textContent = "Error during signup.";
-    }
   }
 });
+
+signupButton.addEventListener("click", () => {
+  loginForm
